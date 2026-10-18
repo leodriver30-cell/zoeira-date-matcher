@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto w-full">
+    <!-- Cabeçalho do Painel -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+        <div>
+            <span class="inline-block px-3 py-1 bg-indigo-500/20 border border-indigo-500/30 rounded-full text-indigo-300 text-xs font-bold uppercase tracking-wide mb-2">
+                {{ t('dash_badge') }}
+            </span>
+            <h1 class="text-2xl sm:text-3xl font-black text-white">
+                {{ t('dash_monitoring') }} <span class="text-rose-400 font-mono">{{ link.slug }}</span>
+            </h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span> {{ t('dash_live_connected') }}
+            </span>
+            <a href="/?lang={{ lang }}" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-all">
+                {{ t('dash_new_link') }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Cards de Métricas Rápidas -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <!-- Visualizações -->
+        <div class="bg-slate-900/80 border border-white/10 rounded-2xl p-5 text-center">
+            <span class="text-xs uppercase font-extrabold text-slate-400 block mb-1">
+                {{ t('stats_views') }}
+            </span>
+            <span id="metricViews" class="text-4xl font-black text-white">
+                {{ link.views }}
+            </span>
+        </div>
+
+        <!-- Tentativas de Fuga (Dodges) -->
+        <div class="bg-slate-900/80 border border-rose-500/30 rounded-2xl p-5 text-center relative overflow-hidden">
+            <span class="text-xs uppercase font-extrabold text-rose-300 block mb-1">
+                {{ t('stats_dodges') }} 🏃💨
+            </span>
+            <span id="metricDodges" class="text-4xl font-black text-rose-400 transition-transform duration-200">
+                {{ link.total_dodges }}
+            </span>
+            <span id="dodgeAlert" class="hidden absolute top-2 right-2 text-xs bg-rose-500 text-white font-bold px-2 py-0.5 rounded-full animate-bounce">
+                {{ t('dash_tried_no') }}
+            </span>
+        </div>
+
+        <!-- Status -->
+        <div class="bg-slate-900/80 border border-white/10 rounded-2xl p-5 text-center">
+            <span class="text-xs uppercase font-extrabold text-slate-400 block mb-1">
+                {{ t('stats_status') }}
+            </span>
+            <span id="metricStatus" class="text-lg font-black block mt-2 {% if link.accepted %}text-emerald-400{% else %}text-amber-400{% endif %}">
+                {% if link.accepted %}
+                    {{ t('status_accepted') }}
+                {% else %}
+                    {{ t('status_waiting') }}
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Seção de Respostas e Agendamentos -->
+    <div class="bg-slate-900/80 border border-white/10 rounded-2xl p-6 shadow-xl mb-6">
+        <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <span>📅</span> {{ t('dash_history_title') }}
+        </h2>
+
+        <div id="responsesContainer" class="space-y-3">
+            {% if responses %}
+                {% for r in responses %}
+                <div class="bg-black/40 border border-emerald-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                        <span class="text-sm font-extrabold text-white block">
+                            {{ t('dash_date_booked') }} <span class="text-emerald-400">{{ r.selected_date }}</span>
+                        </span>
+                        <span class="text-xs text-slate-400">
+                            {{ t('dash_period') }} {{ r.selected_time }} • {{ t('dash_dodges') }} {{ r.dodge_count }}
+                        </span>
+                    </div>
+                    <span class="text-xs bg-emerald-500/20 text-emerald-300 font-bold px-3 py-1 rounded-full border border-emerald-500/30">
+                        {{ t('dash_confirmed_badge') }}
+                    </span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div id="noResponsesBox" class="text-center py-8 text-slate-500 text-sm">
+                    {{ t('dash_no_responses') }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Canais de Notificação e Retorno -->
+    {% if link.link_type == 'date' %}
+    <div class="bg-slate-900/80 border border-emerald-500/30 rounded-2xl p-5 shadow-xl mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+            <span class="text-xs uppercase font-extrabold text-emerald-400 block mb-1">
+                💬 Canais de Retorno do Date
+            </span>
+            <span class="text-xs text-slate-300 block">
+                {% if link.creator_line %}🟢 LINE: <span class="font-mono text-[#06C755] font-bold">{{ link.creator_line }}</span> • {% endif %}
+                {% if link.creator_whatsapp %}📱 WhatsApp: <span class="font-mono text-emerald-300 font-bold">{{ link.creator_whatsapp }}</span> • {% endif %}
+                {% if link.creator_facebook %}💬 Facebook: <span class="font-mono text-blue-300 font-bold">{{ link.creator_facebook }}</span> • {% endif %}
+                <span>🔔 Alertas em tempo real</span>
+            </span>
+        </div>
+        <button onclick="testBotNotification()" id="btnTestBot" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+            <span>{{ t('dash_test_bot_btn') }}</span>
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- Link Compartilhável -->
+    <div class="bg-black/30 border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+        <div class="text-left w-full sm:w-auto">
+            <span class="text-xs text-slate-400 block">{{ t('dash_sent_link') }}</span>
+            <span class="font-mono text-xs text-rose-300 font-semibold break-all" id="shareUrl">
+                {{ request.base_url }}{% if link.link_type == 'date' %}d{% else %}z{% endif %}/{{ link.slug }}?lang={{ lang }}
+            </span>
+        </div>
+        <button onclick="copyShareUrl()" class="w-full sm:w-auto px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-all">
+            {{ t('copy_link_btn') }}
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const SLUG = "{{ link.slug }}";
+
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/api/ws/${SLUG}`;
+    let socket;
+
+    function connectWs() {
+        socket = new WebSocket(wsUrl);
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === "dodge_attempt") {
+                const dodgeElem = document.getElementById("metricDodges");
+                dodgeElem.innerText = data.count;
+                dodgeElem.classList.add("scale-125", "text-rose-300");
+                setTimeout(() => dodgeElem.classList.remove("scale-125", "text-rose-300"), 300);
+
+                const alertTag = document.getElementById("dodgeAlert");
+                alertTag.classList.remove("hidden");
+                setTimeout(() => alertTag.classList.add("hidden"), 1500);
+            } else if (data.type === "date_accepted") {
+                playChime();
+                document.getElementById("metricStatus").innerText = t('status_accepted');
+                document.getElementById("metricStatus").className = "text-lg font-black block mt-2 text-emerald-400";
+                
+                confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
+
+                const alertMsg = t('dash_live_alert_msg', {
+                    target: data.target_name,
+                    date: data.selected_date,
+                    time: data.selected_time
+                });
+                alert(alertMsg);
+                
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        };
+
+        socket.onclose = () => {
+            setTimeout(connectWs, 3000);
+        };
+    }
+    connectWs();
+
+    function playChime() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = "sine";
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.12);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.4);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(ctx.currentTime + i * 0.12);
+                osc.stop(ctx.currentTime + i * 0.12 + 0.4);
+            });
+        } catch(e) {}
+    }
+
+    async function testBotNotification() {
+        const btn = document.getElementById("btnTestBot");
+        if (!btn) return;
+        btn.disabled = true;
+        btn.innerText = "⏳ Disparando...";
+        try {
+            const resp = await fetch(`/api/links/${SLUG}/test_bot`, { method: "POST" });
+            const data = await resp.json();
+            alert(t('test_bot_sent_success'));
+        } catch(e) {
+            alert("Erro ao testar robô.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = t('dash_test_bot_btn');
+        }
+    }
+
+    function copyShareUrl() {
+        const url = document.getElementById("shareUrl").innerText.trim();
+        navigator.clipboard.writeText(url).then(() => {
+            alert(t('message_copied'));
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="relative w-full max-w-lg mx-auto min-h-[500px] flex items-center justify-center">
+    <!-- Card da Zoeira Principal -->
+    <div id="prankCard" class="w-full bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-3xl p-8 sm:p-10 shadow-2xl text-center relative z-10 transition-all duration-300">
+        <span class="text-5xl block mb-4 animate-bounce">👀</span>
+        
+        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight mb-8 leading-snug">
+            {{ link.question or t('default_prank_question') }}
+        </h1>
+
+        <!-- Container de Botões -->
+        <div id="buttonArea" class="relative w-full h-32 flex items-center justify-center gap-6">
+            <!-- Botão SIM -->
+            <button id="btnYes" onclick="onPrankYesClicked()" class="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold rounded-2xl shadow-lg shadow-emerald-950/40 transform hover:scale-105 active:scale-95 transition-all text-lg tracking-wide z-10">
+                {{ t('btn_yes_prank') }}
+            </button>
+
+            <!-- Botão NÃO Fujão -->
+            <button id="btnNo" class="px-8 py-3.5 bg-rose-600 hover:bg-rose-500 text-white font-extrabold rounded-2xl shadow-lg shadow-rose-950/40 text-lg tracking-wide transition-all duration-150 cursor-pointer select-none">
+                {{ t('btn_no_prank') }}
+            </button>
+        </div>
+
+        <!-- Dica Cômica -->
+        <p id="prankHint" class="text-xs text-slate-400 mt-6 min-h-[20px] font-medium transition-opacity">
+            {{ t('prank_hint_initial') }}
+        </p>
+    </div>
+
+    <!-- Tela de Vitória / Eu Sabia -->
+    <div id="victoryCard" class="hidden w-full bg-slate-900/95 backdrop-blur-xl border border-rose-500/30 rounded-3xl p-8 sm:p-10 shadow-2xl text-center z-20">
+        <span class="text-6xl block mb-4">🎉🌈😂</span>
+        
+        <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight mb-3">
+            {{ t('prank_win_title') }}
+        </h2>
+
+        <p id="victorySubtitle" class="text-base text-slate-300 mb-8 leading-relaxed">
+            <!-- Preenchido via JavaScript -->
+        </p>
+
+        <div class="space-y-3">
+            <a href="/?lang={{ lang }}" class="block w-full py-3.5 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold rounded-xl transition-all shadow-lg text-sm">
+                {{ t('prank_try_another') }}
+            </a>
+            <button onclick="shareResult()" class="block w-full py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-all text-sm">
+                {{ t('prank_share_screenshot') }}
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const SLUG = "{{ link.slug }}";
+    let dodgeCount = 0;
+    const btnNo = document.getElementById("btnNo");
+    const prankHint = document.getElementById("prankHint");
+
+    const hints = t('prank_hints') || [
+        "Tentou clicar no Não? Nem tenta! 😂",
+        "Errou feio! O botão correu! 🏃💨"
+    ];
+
+    function dodgeButton(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        dodgeCount++;
+
+        fetch(`/api/links/${SLUG}/dodge`, { method: "POST" });
+
+        const card = document.getElementById("prankCard");
+        const cardRect = card.getBoundingClientRect();
+        
+        const maxLeft = cardRect.width - btnNo.offsetWidth - 30;
+        const maxTop = cardRect.height - btnNo.offsetHeight - 30;
+
+        const newLeft = Math.max(10, Math.floor(Math.random() * maxLeft));
+        const newTop = Math.max(10, Math.floor(Math.random() * maxTop));
+
+        btnNo.style.position = "absolute";
+        btnNo.style.left = `${newLeft}px`;
+        btnNo.style.top = `${newTop}px`;
+
+        if (Array.isArray(hints) && hints.length > 0) {
+            prankHint.innerText = hints[dodgeCount % hints.length];
+        }
+    }
+
+    btnNo.addEventListener("mouseenter", dodgeButton);
+    btnNo.addEventListener("mouseover", dodgeButton);
+    btnNo.addEventListener("touchstart", dodgeButton, { passive: false });
+    btnNo.addEventListener("pointerdown", dodgeButton, { passive: false });
+    btnNo.addEventListener("click", dodgeButton);
+
+    function onPrankYesClicked() {
+        document.getElementById("prankCard").classList.add("hidden");
+        const victoryCard = document.getElementById("victoryCard");
+        victoryCard.classList.remove("hidden");
+
+        const subtitle = t('prank_win_subtitle', { count: dodgeCount });
+        document.getElementById("victorySubtitle").innerText = subtitle;
+
+        confetti({
+            particleCount: 150,
+            spread: 90,
+            origin: { y: 0.6 }
+        });
+        setTimeout(() => {
+            confetti({ particleCount: 100, angle: 60, spread: 55, origin: { x: 0 } });
+            confetti({ particleCount: 100, angle: 120, spread: 55, origin: { x: 1 } });
+        }, 250);
+    }
+
+    function shareResult() {
+        if (navigator.share) {
+            navigator.share({
+                title: t('app_title'),
+                text: t('prank_share_alert', { count: dodgeCount }),
+                url: window.location.href
+            });
+        } else {
+            alert(t('prank_share_alert', { count: dodgeCount }));
+        }
+    }
+</script>
+{% endblock %}

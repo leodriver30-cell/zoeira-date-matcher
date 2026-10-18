@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto w-full">
+    <!-- Cabeçalho de Boas-Vindas -->
+    <div class="text-center mb-8">
+        <span class="inline-block px-3 py-1 bg-rose-500/20 border border-rose-500/30 rounded-full text-rose-300 text-xs font-bold tracking-wide uppercase mb-3">
+            {{ t('hero_badge') }}
+        </span>
+        <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white mb-2">
+            {{ t('hero_title') }}
+        </h1>
+        <p class="text-sm sm:text-base text-slate-300">
+            {{ t('hero_desc') }}
+        </p>
+    </div>
+
+    <!-- Card Principal com Abas -->
+    <div class="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+        <!-- Navegação das Abas -->
+        <div class="flex rounded-xl bg-black/40 p-1 mb-6 border border-white/5">
+            <button id="tabPrank" onclick="switchTab('prank')" class="flex-1 py-2.5 px-4 rounded-lg font-bold text-sm transition-all text-white bg-rose-600 shadow-lg">
+                😂 {{ t('create_prank_tab') }}
+            </button>
+            <button id="tabDate" onclick="switchTab('date')" class="flex-1 py-2.5 px-4 rounded-lg font-bold text-sm transition-all text-slate-400 hover:text-white">
+                💖 {{ t('create_date_tab') }}
+            </button>
+        </div>
+
+        <!-- Formulário: Modo Zoeira -->
+        <div id="prankSection" class="space-y-5">
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                    {{ t('custom_question_label') }}
+                </label>
+                <input type="text" id="prankQuestion" value="{{ t('default_prank_question') }}" 
+                    class="w-full bg-black/30 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 transition-colors">
+            </div>
+
+            <!-- Sugestões Rápidas -->
+            <div class="flex flex-wrap gap-2 text-xs">
+                <span class="text-slate-400 self-center">{{ t('suggestions_label') }}</span>
+                <button type="button" onclick="setPrankQuestion('{{ t('prank_template_gay') }}')" class="px-2.5 py-1 bg-white/5 hover:bg-white/15 border border-white/10 rounded-lg text-slate-300 transition-all">
+                    🌈 {{ t('prank_template_gay') }}
+                </button>
+                <button type="button" onclick="setPrankQuestion('{{ t('prank_template_lunch') }}')" class="px-2.5 py-1 bg-white/5 hover:bg-white/15 border border-white/10 rounded-lg text-slate-300 transition-all">
+                    🍕 {{ t('prank_template_lunch') }}
+                </button>
+                <button type="button" onclick="setPrankQuestion('{{ t('prank_template_ugly') }}')" class="px-2.5 py-1 bg-white/5 hover:bg-white/15 border border-white/10 rounded-lg text-slate-300 transition-all">
+                    😎 {{ t('prank_template_ugly') }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Formulário: Modo Date Romântico -->
+        <div id="dateSection" class="space-y-5 hidden">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-rose-300 mb-2">
+                        {{ t('target_name_label') }}
+                    </label>
+                    <input type="text" id="targetName" placeholder="{{ t('target_name_placeholder') }}" 
+                        class="w-full bg-black/30 border border-rose-500/30 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-rose-400 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                        {{ t('creator_name_label') }}
+                    </label>
+                    <input type="text" id="creatorName" placeholder="{{ t('creator_name_placeholder') }}" 
+                        class="w-full bg-black/30 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-rose-400 transition-colors">
+                </div>
+            </div>
+
+            <!-- Seletor em Abas de Redes Sociais para Retorno -->
+            <div class="border-t border-white/10 pt-4 space-y-3">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-300 block">
+                    {{ t('contact_section_title') }}
+                </span>
+
+                <!-- Abas dos Aplicativos (LINE, WhatsApp, Facebook) -->
+                <div class="grid grid-cols-3 gap-2 p-1 bg-black/40 rounded-xl border border-white/10">
+                    <button type="button" onclick="switchSocialTab('line')" id="tabLine" 
+                        class="py-2.5 px-3 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 text-white bg-[#06C755] shadow-lg shadow-green-950/40">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                            <path d="M24 10.304c0-5.369-5.383-9.738-12-9.738-6.616 0-12 4.369-12 9.738 0 4.814 4.269 8.846 10.019 9.572.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.304"/>
+                        </svg>
+                        <span>LINE</span>
+                        <span id="badgeLine" class="hidden text-[10px] bg-white text-[#06C755] rounded-full px-1.5 font-black">✓</span>
+                    </button>
+
+                    <button type="button" onclick="switchSocialTab('whatsapp')" id="tabWhatsapp" 
+                        class="py-2.5 px-3 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white">
+                        <span>💬</span>
+                        <span>WhatsApp</span>
+                        <span id="badgeWhatsapp" class="hidden text-[10px] bg-white text-emerald-600 rounded-full px-1.5 font-black">✓</span>
+                    </button>
+
+                    <button type="button" onclick="switchSocialTab('facebook')" id="tabFacebook" 
+                        class="py-2.5 px-3 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white">
+                        <span>💬</span>
+                        <span>Messenger</span>
+                        <span id="badgeFacebook" class="hidden text-[10px] bg-white text-blue-600 rounded-full px-1.5 font-black">✓</span>
+                    </button>
+                </div>
+
+                <!-- Painel 1: LINE -->
+                <div id="panelLine" class="space-y-1.5">
+                    <label class="block text-xs font-bold text-[#06C755]">
+                        {{ t('contact_line_label') }}
+                    </label>
+                    <input type="text" id="creatorLine" oninput="updateTabBadges()" placeholder="{{ t('contact_line_placeholder') }}" 
+                        class="w-full bg-black/40 border border-[#06C755]/50 focus:border-[#06C755] rounded-xl px-4 py-3 text-white placeholder-slate-500 text-sm focus:outline-none transition-colors">
+                </div>
+
+                <!-- Painel 2: WhatsApp -->
+                <div id="panelWhatsapp" class="space-y-1.5 hidden">
+                    <label class="block text-xs font-bold text-emerald-400">
+                        {{ t('contact_whatsapp_label') }}
+                    </label>
+                    <input type="text" id="creatorWhatsapp" oninput="updateTabBadges()" placeholder="{{ t('contact_whatsapp_placeholder') }}" 
+                        class="w-full bg-black/40 border border-emerald-500/50 focus:border-emerald-400 rounded-xl px-4 py-3 text-white placeholder-slate-500 text-sm focus:outline-none transition-colors">
+                </div>
+
+                <!-- Painel 3: Facebook Messenger -->
+                <div id="panelFacebook" class="space-y-1.5 hidden">
+                    <label class="block text-xs font-bold text-blue-400">
+                        {{ t('contact_facebook_label') }}
+                    </label>
+                    <input type="text" id="creatorFacebook" oninput="updateTabBadges()" placeholder="{{ t('contact_facebook_placeholder') }}" 
+                        class="w-full bg-black/40 border border-blue-500/50 focus:border-blue-400 rounded-xl px-4 py-3 text-white placeholder-slate-500 text-sm focus:outline-none transition-colors">
+                </div>
+            </div>
+
+            <!-- Conexão com Google Calendar Simplificada em 1 Clique -->
+            <div class="bg-black/30 border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-left">
+                    <span class="text-sm font-bold block text-white">{{ t('gcal_sync_title') }}</span>
+                    <span class="text-xs text-slate-400" id="gcalStatusText">
+                        {{ t('gcal_sync_desc') }}
+                    </span>
+                </div>
+                <button type="button" onclick="connectGoogleCalendar()" id="gcalBtn" class="w-full sm:w-auto px-4 py-2.5 bg-white text-slate-800 hover:bg-slate-100 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2.5 shadow-md">
+                    <svg viewBox="0 0 24 24" width="18" height="18">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                    <span>{{ t('google_cal_connect_btn') }}</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Botão de Criação -->
+        <div class="mt-8">
+            <button type="button" onclick="generateLink()" id="btnGenerate" class="w-full py-4 bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 hover:from-rose-500 hover:to-pink-600 text-white font-extrabold rounded-xl shadow-lg shadow-rose-900/40 transition-all transform active:scale-98 text-base flex items-center justify-center gap-2">
+                <span>🚀</span> {{ t('generate_link_btn') }}
+            </button>
+        </div>
+
+        <!-- Resultado do Link Gerado (Oculto Inicialmente) -->
+        <div id="resultBox" class="mt-8 pt-6 border-t border-white/10 hidden space-y-4">
+            <div class="bg-black/50 border border-rose-500/30 rounded-xl p-4 text-center">
+                <span class="text-xs uppercase font-extrabold text-emerald-400 block mb-1">
+                    {{ t('link_created_success') }}
+                </span>
+                <p id="generatedUrlText" class="font-mono text-sm text-rose-300 break-all select-all font-semibold my-2"></p>
+                
+                <div class="flex flex-wrap gap-2 justify-center mt-3">
+                    <button onclick="copyGeneratedLink()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5">
+                        📋 {{ t('copy_link_btn') }}
+                    </button>
+                    <a id="btnOpenLink" href="#" target="_blank" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5">
+                        🔗 {{ t('open_link_btn') }}
+                    </a>
+                    <a id="btnDashboardLink" href="#" target="_blank" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5">
+                        📊 {{ t('dashboard_link_btn') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentMode = "prank";
+    let googleCalendarToken = null;
+
+    function switchTab(mode) {
+        currentMode = mode;
+        const tabPrank = document.getElementById("tabPrank");
+        const tabDate = document.getElementById("tabDate");
+        const prankSection = document.getElementById("prankSection");
+        const dateSection = document.getElementById("dateSection");
+
+        if (mode === "prank") {
+            tabPrank.className = "flex-1 py-2.5 px-4 rounded-lg font-bold text-sm transition-all text-white bg-rose-600 shadow-lg";
+            tabDate.className = "flex-1 py-2.5 px-4 rounded-lg font-bold text-sm transition-all text-slate-400 hover:text-white";
+            prankSection.classList.remove("hidden");
+            dateSection.classList.add("hidden");
+        } else {
+            tabDate.className = "flex-1 py-2.5 px-4 rounded-lg font-bold text-sm transition-all text-white bg-rose-600 shadow-lg";
+            tabPrank.className = "flex-1 py-2.5 px-4 rounded-lg font-bold text-sm transition-all text-slate-400 hover:text-white";
+            dateSection.classList.remove("hidden");
+            prankSection.classList.add("hidden");
+        }
+    }
+
+    function setPrankQuestion(q) {
+        document.getElementById("prankQuestion").value = q;
+    }
+
+    function switchSocialTab(app) {
+        const tabLine = document.getElementById("tabLine");
+        const tabWa = document.getElementById("tabWhatsapp");
+        const tabFb = document.getElementById("tabFacebook");
+        const panelLine = document.getElementById("panelLine");
+        const panelWa = document.getElementById("panelWhatsapp");
+        const panelFb = document.getElementById("panelFacebook");
+
+        // Reset all tabs
+        [tabLine, tabWa, tabFb].forEach(t => {
+            t.className = "py-2.5 px-3 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white";
+        });
+        [panelLine, panelWa, panelFb].forEach(p => p.classList.add("hidden"));
+
+        if (app === "line") {
+            tabLine.className = "py-2.5 px-3 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 text-white bg-[#06C755] shadow-lg shadow-green-950/40";
+            panelLine.classList.remove("hidden");
+        } else if (app === "whatsapp") {
+            tabWa.className = "py-2.5 px-3 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 text-white bg-emerald-600 shadow-lg shadow-emerald-950/40";
+            panelWa.classList.remove("hidden");
+        } else {
+            tabFb.className = "py-2.5 px-3 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 text-white bg-blue-600 shadow-lg shadow-blue-950/40";
+            panelFb.classList.remove("hidden");
+        }
+    }
+
+    function updateTabBadges() {
+        const lineVal = document.getElementById("creatorLine").value.trim();
+        const waVal = document.getElementById("creatorWhatsapp").value.trim();
+        const fbVal = document.getElementById("creatorFacebook").value.trim();
+
+        document.getElementById("badgeLine").classList.toggle("hidden", !lineVal);
+        document.getElementById("badgeWhatsapp").classList.toggle("hidden", !waVal);
+        document.getElementById("badgeFacebook").classList.toggle("hidden", !fbVal);
+    }
+
+    function connectGoogleCalendar() {
+        const width = 500, height = 620;
+        const left = (window.innerWidth - width) / 2;
+        const top = (window.innerHeight - height) / 2;
+        const authWindow = window.open(`/auth/google/login?lang=${window.CURRENT_LANG}`, "GoogleAuth", `width=${width},height=${height},top=${top},left=${left}`);
+        
+        window.addEventListener("message", (event) => {
+            if (event.data && event.data.type === "GOOGLE_AUTH_SUCCESS") {
+                googleCalendarToken = JSON.stringify(event.data.token);
+                document.getElementById("gcalStatusText").innerText = `✅ ${t('google_cal_connected')}`;
+                document.getElementById("gcalBtn").innerText = `✅ ${t('google_cal_connected')}`;
+                document.getElementById("gcalBtn").classList.add("bg-emerald-600/30", "border-emerald-500");
+            }
+        });
+    }
+
+    async function generateLink() {
+        const btn = document.getElementById("btnGenerate");
+        btn.disabled = true;
+        btn.innerHTML = `<span>⏳</span> ${t('creating_btn')}`;
+
+        const payload = {
+            link_type: currentMode,
+            question: currentMode === "prank" ? document.getElementById("prankQuestion").value : null,
+            target_name: currentMode === "date" ? document.getElementById("targetName").value : null,
+            creator_name: currentMode === "date" ? document.getElementById("creatorName").value : null,
+            creator_whatsapp: currentMode === "date" ? document.getElementById("creatorWhatsapp").value : null,
+            creator_line: currentMode === "date" ? document.getElementById("creatorLine").value : null,
+            creator_facebook: currentMode === "date" ? document.getElementById("creatorFacebook").value : null,
+            google_credentials: googleCalendarToken
+        };
+
+        try {
+            const resp = await fetch("/api/links", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+
+            if (data.status === "success") {
+                // Anexa o idioma atual da página ao link gerado
+                const fullUrl = `${window.location.origin}${data.url}?lang=${window.CURRENT_LANG}`;
+                document.getElementById("generatedUrlText").innerText = fullUrl;
+                document.getElementById("btnOpenLink").href = fullUrl;
+                document.getElementById("btnDashboardLink").href = `${window.location.origin}${data.dashboard_url}?lang=${window.CURRENT_LANG}`;
+                document.getElementById("resultBox").classList.remove("hidden");
+                confetti({ particleCount: 70, spread: 60, origin: { y: 0.7 } });
+            }
+        } catch (err) {
+            alert(t('error_create_link'));
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<span>🚀</span> ${t('generate_link_btn')}`;
+        }
+    }
+
+    function copyGeneratedLink() {
+        const text = document.getElementById("generatedUrlText").innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert(t('message_copied'));
+        });
+    }
+</script>
+{% endblock %}
