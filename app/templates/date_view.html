@@ -72,11 +72,55 @@
                 {{ t('date_schedule_title') }}
             </h2>
         </div>
-        <p class="text-xs text-rose-300 mb-6">
+        <p class="text-xs text-rose-300 mb-3">
             {{ t('date_schedule_subtitle', creator=creator_name) }}
         </p>
 
-        <!-- Grade de Dias Disponíveis -->
+        <!-- Aviso de duração de 3h e fuso horário travado do convite -->
+        <div class="bg-black/30 border border-white/10 rounded-xl px-3 py-2 mb-5 text-[11px] text-slate-300 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3">
+            <span class="text-rose-200 font-semibold">{{ t('date_duration_notice') }}</span>
+            <span class="hidden sm:inline text-white/20">•</span>
+            <span class="text-amber-300/90 font-semibold">{{ t('timezone_auto_notice', tz=tz_label) }}</span>
+        </div>
+
+        {% if not is_legacy %}
+        <!-- Grade de Dias Escolhidos pelo Criador (até 10 dias) -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-64 overflow-y-auto p-1 custom-scrollbar mb-5" id="daysGrid">
+            {% for item in custom_days %}
+            <button type="button"
+                onclick="selectDate('{{ item.date }}')"
+                {% if not item.available %}disabled{% endif %}
+                class="day-btn p-3 rounded-xl border text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5
+                {% if item.available %}
+                    bg-white/5 border-emerald-500/40 hover:bg-emerald-500/20 hover:border-emerald-400 text-white cursor-pointer
+                {% else %}
+                    bg-black/40 border-white/5 text-slate-500 cursor-not-allowed opacity-50
+                {% endif %}"
+                data-date="{{ item.date }}">
+                <span class="text-[10px] uppercase tracking-wider text-rose-300 font-semibold">{{ item.weekday }}</span>
+                <span class="text-sm font-black">{{ item.short_date }}</span>
+                {% if item.available %}
+                    <span class="text-[10px] text-emerald-400 font-extrabold mt-0.5">{{ t('calendar_available') }}</span>
+                {% else %}
+                    <span class="text-[10px] text-slate-500 mt-0.5">{{ t('calendar_busy') }}</span>
+                {% endif %}
+            </button>
+            {% endfor %}
+        </div>
+
+        <!-- Seleção de Horário Exato do Dia Escolhido -->
+        <div class="mb-6 text-left bg-black/30 p-4 rounded-xl border border-white/10">
+            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2.5">
+                {{ t('choose_exact_time_label') }}
+            </label>
+            <div id="exactTimesContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <p id="pickDayFirstHint" class="text-xs text-slate-400 italic col-span-full text-center py-2">
+                    {{ t('pick_day_first_hint') }}
+                </p>
+            </div>
+        </div>
+        {% else %}
+        <!-- Modo Legado (Links antigos sem horários personalizados) -->
         <div class="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-64 overflow-y-auto p-1 custom-scrollbar mb-6" id="daysGrid">
             {% for item in schedule %}
             <button type="button" 
@@ -99,7 +143,6 @@
             {% endfor %}
         </div>
 
-        <!-- Seleção de Horário / Período -->
         <div class="mb-6 text-left bg-black/30 p-4 rounded-xl border border-white/10">
             <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
                 {{ t('time_slot_label') }}
@@ -116,6 +159,7 @@
                 </button>
             </div>
         </div>
+        {% endif %}
 
         <!-- Botão de Confirmação Final -->
         <button id="btnConfirmDate" onclick="submitDateChoice()" disabled class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black rounded-2xl shadow-xl shadow-emerald-950/40 text-base tracking-wide transition-all transform active:scale-98">
@@ -192,9 +236,16 @@
     const CREATOR_LINE = "{{ link.creator_line or '' }}";
     let CREATOR_FACEBOOK = "{{ link.creator_facebook or '' }}";
 
+    const IS_LEGACY = {{ 'true' if is_legacy else 'false' }};
+    let CUSTOM_DAYS = {{ custom_days | tojson | safe }};
+    const LINK_TIMEZONE = {{ link_timezone | tojson | safe }};
+    const TZ_LABEL = {{ tz_label | tojson | safe }};
+    const DURATION_MIN = {{ duration_min }};
+
     let dodgeAttempts = 0;
     let selectedDateVal = null;
-    let selectedTimeVal = "night";
+    let selectedTimeVal = IS_LEGACY ? "night" : null;
+    let selectedTimeRange = null;
     let isDodging = false;
 
     const btnDateNo = document.getElementById("btnDateNo");
@@ -334,6 +385,56 @@
                 btn.classList.remove("ring-2", "ring-emerald-400", "bg-emerald-600/30");
             }
         });
+
+        if (IS_LEGACY) {
+            document.getElementById("btnConfirmDate").disabled = false;
+            return;
+        }
+
+        selectedTimeVal = null;
+        selectedTimeRange = null;
+        document.getElementById("btnConfirmDate").disabled = true;
+
+        const dayObj = CUSTOM_DAYS.find(d => d.date === dateStr);
+        const container = document.getElementById("exactTimesContainer");
+        if (!container || !dayObj) return;
+
+        container.innerHTML = "";
+        let firstAvailable = null;
+
+        dayObj.times.forEach(tm => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.setAttribute("data-time", tm.time);
+            if (tm.available) {
+                if (!firstAvailable) firstAvailable = tm;
+                btn.className = "exact-time-btn py-2.5 px-3 rounded-xl border border-white/15 bg-white/5 hover:bg-rose-500/20 hover:border-rose-400 text-xs font-bold text-slate-200 hover:text-white transition-all text-center cursor-pointer flex items-center justify-center gap-1.5";
+                btn.innerHTML = `<span>⏰</span> <span>${tm.range}</span>`;
+                btn.onclick = () => selectExactTime(tm.time, tm.range);
+            } else {
+                btn.disabled = true;
+                btn.className = "exact-time-btn py-2.5 px-3 rounded-xl border border-white/5 bg-black/40 text-xs font-bold text-slate-500 line-through opacity-50 cursor-not-allowed text-center flex items-center justify-center gap-1.5";
+                btn.innerHTML = `<span>🔒</span> <span>${tm.range}</span>`;
+            }
+            container.appendChild(btn);
+        });
+
+        if (firstAvailable) {
+            selectExactTime(firstAvailable.time, firstAvailable.range);
+        }
+    }
+
+    function selectExactTime(timeStr, rangeStr) {
+        selectedTimeVal = timeStr;
+        selectedTimeRange = rangeStr;
+        document.querySelectorAll(".exact-time-btn").forEach(btn => {
+            if (btn.disabled) return;
+            if (btn.getAttribute("data-time") === timeStr) {
+                btn.className = "exact-time-btn py-2.5 px-3 rounded-xl border border-rose-500 bg-rose-600/35 ring-2 ring-rose-400 text-xs font-extrabold text-white transition-all text-center cursor-pointer flex items-center justify-center gap-1.5";
+            } else {
+                btn.className = "exact-time-btn py-2.5 px-3 rounded-xl border border-white/15 bg-white/5 hover:bg-rose-500/20 hover:border-rose-400 text-xs font-bold text-slate-200 hover:text-white transition-all text-center cursor-pointer flex items-center justify-center gap-1.5";
+            }
+        });
         document.getElementById("btnConfirmDate").disabled = false;
     }
 
@@ -344,22 +445,45 @@
         const timeMorning = document.getElementById("timeMorning");
 
         [timeNight, timeAfternoon, timeMorning].forEach(b => {
-            b.className = "time-btn py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-xs font-bold text-slate-300 hover:text-white transition-all text-center";
+            if (b) b.className = "time-btn py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-xs font-bold text-slate-300 hover:text-white transition-all text-center";
         });
 
-        if (slot === 'night') {
+        if (slot === 'night' && timeNight) {
             timeNight.className = "time-btn py-2 px-3 rounded-lg border border-rose-500 bg-rose-600/30 text-xs font-bold text-white transition-all text-center";
-        } else if (slot === 'afternoon') {
+        } else if (slot === 'afternoon' && timeAfternoon) {
             timeAfternoon.className = "time-btn py-2 px-3 rounded-lg border border-rose-500 bg-rose-600/30 text-xs font-bold text-white transition-all text-center";
-        } else {
+        } else if (timeMorning) {
             timeMorning.className = "time-btn py-2 px-3 rounded-lg border border-rose-500 bg-rose-600/30 text-xs font-bold text-white transition-all text-center";
         }
     }
 
     function getTimeLabel(slot) {
+        if (!IS_LEGACY) {
+            const range = selectedTimeRange || slot;
+            return `${range} (${TZ_LABEL})`;
+        }
         if (slot === 'night') return t('time_label_night');
         if (slot === 'afternoon') return t('time_label_afternoon');
         return t('time_label_morning');
+    }
+
+    function buildGcalDatesParam(dateStr, timeSlot) {
+        if (IS_LEGACY) {
+            const cleanDate = dateStr.replace(/-/g, '');
+            let startH = "190000", endH = "220000";
+            if (timeSlot === 'afternoon') { startH = "140000"; endH = "170000"; }
+            if (timeSlot === 'morning') { startH = "113000"; endH = "140000"; }
+            return `${cleanDate}T${startH}/${cleanDate}T${endH}`;
+        }
+
+        const [y, m, d] = dateStr.split("-").map(Number);
+        const [hh, mm] = timeSlot.split(":").map(Number);
+        const startUtc = new Date(Date.UTC(y, m - 1, d, hh, mm, 0));
+        const endUtc = new Date(startUtc.getTime() + DURATION_MIN * 60000);
+
+        const pad = n => String(n).padStart(2, "0");
+        const fmt = dt => `${dt.getUTCFullYear()}${pad(dt.getUTCMonth() + 1)}${pad(dt.getUTCDate())}T${pad(dt.getUTCHours())}${pad(dt.getUTCMinutes())}00`;
+        return `${fmt(startUtc)}/${fmt(endUtc)}`;
     }
 
     async function onLineClick(event) {
@@ -412,9 +536,10 @@
     }
 
     async function submitDateChoice() {
-        if (!selectedDateVal) return;
+        if (!selectedDateVal || !selectedTimeVal) return;
 
         const btn = document.getElementById("btnConfirmDate");
+        const originalText = btn.innerText;
         btn.disabled = true;
         btn.innerText = t('scheduling_status');
 
@@ -425,25 +550,36 @@
                 body: JSON.stringify({
                     selected_date: selectedDateVal,
                     selected_time: selectedTimeVal,
-                    dodge_count: dodgeAttempts
+                    dodge_count: dodgeAttempts,
+                    lang: window.CURRENT_LANG || "pt"
                 })
             });
             const data = await resp.json();
 
+            if (!resp.ok) {
+                alert(data.detail || t('slot_already_taken'));
+                if (!IS_LEGACY) {
+                    const schedResp = await fetch(`/api/links/${SLUG}/schedule?lang=${window.CURRENT_LANG || 'pt'}`);
+                    if (schedResp.ok) {
+                        const schedData = await schedResp.json();
+                        CUSTOM_DAYS = schedData.days || CUSTOM_DAYS;
+                        selectDate(selectedDateVal);
+                    }
+                }
+                btn.innerText = originalText;
+                return;
+            }
+
             document.getElementById("calendarCard").classList.add("hidden");
             document.getElementById("confirmedCard").classList.remove("hidden");
             const timeLabel = getTimeLabel(selectedTimeVal);
-            document.getElementById("confirmedDateDisplay").innerText = `${selectedDateVal} (${timeLabel})`;
+            document.getElementById("confirmedDateDisplay").innerText = `${selectedDateVal} • ${timeLabel}`;
 
-            // 1. Gera Link Oficial 1-Clique do Google Calendar
-            const cleanDate = selectedDateVal.replace(/-/g, '');
-            let startH = "190000", endH = "220000";
-            if (selectedTimeVal === 'afternoon') { startH = "140000"; endH = "170000"; }
-            if (selectedTimeVal === 'morning') { startH = "113000"; endH = "140000"; }
-            
+            // 1. Gera Link Oficial 1-Clique do Google Calendar (com fuso travado ctz)
+            const datesParam = buildGcalDatesParam(selectedDateVal, selectedTimeVal);
             const gcalTitle = encodeURIComponent(`Date com ${TARGET_NAME} 💖🥂`);
-            const gcalDetails = encodeURIComponent(`Encontro especial agendado com muito carinho! ✨ Com ${CREATOR_NAME}`);
-            const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${gcalTitle}&dates=${cleanDate}T${startH}/${cleanDate}T${endH}&details=${gcalDetails}`;
+            const gcalDetails = encodeURIComponent(`Encontro especial agendado com muito carinho! ✨ Com ${CREATOR_NAME} (${timeLabel})`);
+            const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${gcalTitle}&dates=${datesParam}&ctz=${encodeURIComponent(LINK_TIMEZONE)}&details=${gcalDetails}`;
             document.getElementById("btnSaveToGoogleCalendar").href = gcalUrl;
 
             // 2. Prepara mensagem formatada com carinho
@@ -493,6 +629,7 @@
             confetti({ particleCount: 180, spread: 100, origin: { y: 0.5 } });
         } catch (e) {
             alert(t('error_confirm_date'));
+            btn.innerText = originalText;
             btn.disabled = false;
         }
     }

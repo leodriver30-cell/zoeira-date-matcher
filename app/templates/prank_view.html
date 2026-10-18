@@ -11,20 +11,20 @@
         </h1>
 
         <!-- Container de Botões -->
-        <div id="buttonArea" class="relative w-full h-32 flex items-center justify-center gap-6">
+        <div id="buttonArea" class="w-full h-32 flex items-center justify-center gap-6">
             <!-- Botão SIM -->
-            <button id="btnYes" onclick="onPrankYesClicked()" class="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold rounded-2xl shadow-lg shadow-emerald-950/40 transform hover:scale-105 active:scale-95 transition-all text-lg tracking-wide z-10">
+            <button id="btnYes" onclick="onPrankYesClicked()" class="relative z-20 px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold rounded-2xl shadow-lg shadow-emerald-950/40 transform hover:scale-105 active:scale-95 transition-all duration-300 text-lg tracking-wide cursor-pointer">
                 {{ t('btn_yes_prank') }}
             </button>
 
             <!-- Botão NÃO Fujão -->
-            <button id="btnNo" class="px-8 py-3.5 bg-rose-600 hover:bg-rose-500 text-white font-extrabold rounded-2xl shadow-lg shadow-rose-950/40 text-lg tracking-wide transition-all duration-150 cursor-pointer select-none">
+            <button id="btnNo" class="z-10 px-8 py-3.5 bg-rose-600 hover:bg-rose-500 text-white font-extrabold rounded-2xl shadow-lg shadow-rose-950/40 text-lg tracking-wide transition-all duration-300 ease-out cursor-pointer select-none">
                 {{ t('btn_no_prank') }}
             </button>
         </div>
 
         <!-- Dica Cômica -->
-        <p id="prankHint" class="text-xs text-slate-400 mt-6 min-h-[20px] font-medium transition-opacity">
+        <p id="prankHint" class="text-xs text-slate-400 mt-6 min-h-[20px] font-medium transition-all duration-300">
             {{ t('prank_hint_initial') }}
         </p>
     </div>
@@ -56,41 +56,118 @@
 {% block scripts %}
 <script>
     const SLUG = "{{ link.slug }}";
+    const MAX_DODGES_BEFORE_HIDE = 8; // 7 esquivas, e na 8ª tentativa o botão se esconde atrás do SIM
     let dodgeCount = 0;
+    let isHiddenBehindYes = false;
+
     const btnNo = document.getElementById("btnNo");
+    const btnYes = document.getElementById("btnYes");
     const prankHint = document.getElementById("prankHint");
+    const card = document.getElementById("prankCard");
 
     const hints = t('prank_hints') || [
         "Tentou clicar no Não? Nem tenta! 😂",
         "Errou feio! O botão correu! 🏃💨"
     ];
 
+    function hideNoBehindYes() {
+        // Posiciona o botão NÃO exatamente no centro do botão SIM, menor que ele, para ficar 100% coberto
+        const targetLeft = btnYes.offsetLeft + (btnYes.offsetWidth - btnNo.offsetWidth) / 2;
+        const targetTop = btnYes.offsetTop + (btnYes.offsetHeight - btnNo.offsetHeight) / 2;
+
+        btnNo.style.zIndex = "10";
+        btnNo.style.transition = "left 0.55s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.55s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.55s ease, opacity 0.2s ease 0.4s, visibility 0s linear 0.6s";
+        btnNo.style.left = `${targetLeft}px`;
+        btnNo.style.top = `${targetTop}px`;
+        btnNo.style.transform = "scale(0.5)";
+        btnNo.style.opacity = "0";
+        btnNo.style.visibility = "hidden";
+        btnNo.style.pointerEvents = "none";
+        btnNo.style.cursor = "default";
+        btnNo.disabled = true;
+        btnNo.tabIndex = -1;
+        btnNo.setAttribute("aria-hidden", "true");
+
+        // Destaca o botão SIM como única opção
+        btnYes.classList.add("scale-110", "ring-4", "ring-emerald-400/50");
+
+        // Atualiza a dica cômica informando que o NÃO se escondeu atrás do SIM
+        prankHint.innerText = t('prank_hint_hidden');
+        prankHint.classList.remove("text-slate-400");
+        prankHint.classList.add("text-emerald-300", "font-bold", "text-sm");
+    }
+
     function dodgeButton(e) {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
-        dodgeCount++;
+        if (isHiddenBehindYes) return;
 
+        const currLeft = btnNo.offsetLeft;
+        const currTop = btnNo.offsetTop;
+
+        // Na primeira esquiva, fixa a posição inicial absoluta para que a animação deslize suavemente
+        if (btnNo.style.position !== "absolute") {
+            btnNo.style.position = "absolute";
+            btnNo.style.left = `${currLeft}px`;
+            btnNo.style.top = `${currTop}px`;
+            void btnNo.offsetWidth;
+        }
+
+        dodgeCount++;
         fetch(`/api/links/${SLUG}/dodge`, { method: "POST" });
 
-        const card = document.getElementById("prankCard");
-        const cardRect = card.getBoundingClientRect();
-        
-        const maxLeft = cardRect.width - btnNo.offsetWidth - 30;
-        const maxTop = cardRect.height - btnNo.offsetHeight - 30;
+        // Na 5ª tentativa, o botão NÃO foge para trás do botão SIM e perde a funcionalidade!
+        if (dodgeCount >= MAX_DODGES_BEFORE_HIDE) {
+            isHiddenBehindYes = true;
+            hideNoBehindYes();
+            return;
+        }
 
-        const newLeft = Math.max(10, Math.floor(Math.random() * maxLeft));
-        const newTop = Math.max(10, Math.floor(Math.random() * maxTop));
+        const yesRelLeft = btnYes.offsetLeft;
+        const yesRelTop = btnYes.offsetTop;
 
-        btnNo.style.position = "absolute";
+        const pad = 20;
+        const maxLeft = Math.max(pad, card.clientWidth - btnNo.offsetWidth - pad);
+        const maxTop = Math.max(pad, card.clientHeight - btnNo.offsetHeight - pad);
+
+        let newLeft = pad;
+        let newTop = pad;
+
+        // Sorteia uma nova posição longe da posição atual e sem cobrir o botão SIM antes da hora
+        for (let attempt = 0; attempt < 15; attempt++) {
+            const candidateLeft = Math.floor(pad + Math.random() * Math.max(10, maxLeft - pad));
+            const candidateTop = Math.floor(pad + Math.random() * Math.max(10, maxTop - pad));
+
+            const overlapsYes = !(
+                candidateLeft + btnNo.offsetWidth < yesRelLeft - 16 ||
+                candidateLeft > yesRelLeft + btnYes.offsetWidth + 16 ||
+                candidateTop + btnNo.offsetHeight < yesRelTop - 16 ||
+                candidateTop > yesRelTop + btnYes.offsetHeight + 16
+            );
+            const distFromCurrent = Math.hypot(candidateLeft - currLeft, candidateTop - currTop);
+
+            newLeft = candidateLeft;
+            newTop = candidateTop;
+            if (!overlapsYes && distFromCurrent > 70) {
+                break;
+            }
+        }
+
         btnNo.style.left = `${newLeft}px`;
         btnNo.style.top = `${newTop}px`;
 
         if (Array.isArray(hints) && hints.length > 0) {
-            prankHint.innerText = hints[dodgeCount % hints.length];
+            prankHint.innerText = hints[(dodgeCount - 1) % hints.length];
         }
     }
+
+    window.addEventListener("resize", () => {
+        if (isHiddenBehindYes) {
+            hideNoBehindYes();
+        }
+    });
 
     btnNo.addEventListener("mouseenter", dodgeButton);
     btnNo.addEventListener("mouseover", dodgeButton);

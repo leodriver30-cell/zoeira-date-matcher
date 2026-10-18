@@ -22,9 +22,9 @@ class Link(Base):
     creator_line = Column(String(100), nullable=True) # LINE ID ou link de contato
     creator_webhook = Column(String(255), nullable=True)
     
-    # Google Calendar & Disponibilidade
-    google_credentials = Column(Text, nullable=True) # JSON com token / refresh
-    available_days = Column(Text, nullable=True) # JSON com dias manuais da semana
+    # Disponibilidade do convidante (JSON com timezone, duration_min, days e taken)
+    google_credentials = Column(Text, nullable=True) # Obsoleto (mantido para compatibilidade com banco SQLite existente)
+    available_days = Column(Text, nullable=True) # JSON: {"timezone": "...", "duration_min": 180, "days": [{"date": "YYYY-MM-DD", "times": ["HH:MM"]}], "taken": ["YYYY-MM-DD|HH:MM"]}
     
     # Estatísticas
     views = Column(Integer, default=0)

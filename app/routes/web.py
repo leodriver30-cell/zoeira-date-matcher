@@ -4,8 +4,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Link
-from app.services.i18n_service import detect_language, t, SUPPORTED_LANGUAGES, TRANSLATIONS
-from app.services.google_calendar import get_calendar_freebusy
+from app.services.i18n_service import detect_language, t, SUPPORTED_LANGUAGES, TRANSLATIONS, TZ_CITY_NAMES, FALLBACK_TIMEZONES
+from app.routes.api import build_availability_ViewModel
 from pathlib import Path
 
 router = APIRouter()
@@ -20,6 +20,8 @@ async def index_page(request: Request, lang: str | None = None):
         "lang": detected_lang,
         "supported_languages": SUPPORTED_LANGUAGES,
         "translations": TRANSLATIONS,
+        "tz_city_names": TZ_CITY_NAMES,
+        "fallback_timezones": FALLBACK_TIMEZONES,
         "t": lambda k, **kw: t(k, lang=detected_lang, **kw)
     }
     return templates.TemplateResponse(request=request, name="index.html", context=context)
@@ -54,9 +56,8 @@ async def date_view_page(slug: str, request: Request, lang: str | None = None, d
     db.commit()
 
     detected_lang = detect_language(request.headers.get("accept-language"), lang)
-    schedule = get_calendar_freebusy(link.google_credentials, days_ahead=30)
+    avail_vm = build_availability_ViewModel(link, display_lang=detected_lang)
 
-    # Formata a pergunta romântica personalizada com o nome
     target_name = link.target_name or ("você" if detected_lang == "pt" else "you")
     personalized_question = t("default_date_question", lang=detected_lang, name=target_name)
     if link.question:
@@ -68,7 +69,12 @@ async def date_view_page(slug: str, request: Request, lang: str | None = None, d
         "target_name": target_name,
         "creator_name": link.creator_name or "Ele",
         "question": personalized_question,
-        "schedule": schedule,
+        "is_legacy": avail_vm["is_legacy"],
+        "custom_days": avail_vm["days"],
+        "schedule": avail_vm["schedule"],
+        "link_timezone": avail_vm["timezone"],
+        "tz_label": avail_vm["tz_label"],
+        "duration_min": avail_vm["duration_min"],
         "lang": detected_lang,
         "supported_languages": SUPPORTED_LANGUAGES,
         "translations": TRANSLATIONS,

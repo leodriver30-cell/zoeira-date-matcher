@@ -35,15 +35,15 @@ The platform features two distinct interactive modes:
 - **Dynamic Viewport Scaling**: Scampers are calculated relative to `window.innerWidth`, ensuring optimal theatrical visibility on both 375px mobile screens and ultra-wide desktop monitors.
 - **Irresistible "YES" Highlight**: Once the "NO" button is stolen, the "YES" button automatically expands, pulsates, and glows with romantic hearts.
 
-### 📅 2. Interactive Calendar & Date Scheduling
-- **Visual Availability Grid**: Shows selectable open dates vs. occupied dates across the upcoming 30 days.
-- **Time Slot Preferences**: Allows selecting preferred periods (🌙 Evening, ☀️ Afternoon, ☕ Morning / Lunch).
-- **1-Click Google Calendar Generator**: Automatically builds pre-filled Google Calendar event URLs (`calendar.google.com/calendar/render?...`) with custom title, date ranges, and event details.
+### 📅 2. Custom 10-Day & Exact Time Slot Scheduling (3h Duration)
+- **Creator-Controlled Availability**: Creators select up to **10 free days** and define **exact time slots** (e.g., `19:00 – 22:00`, 3-hour default duration) directly when creating the invitation—no external account login required.
+- **Automatic Timezone Detection & Language Fallback**: Automatically locks the invitation to the creator's browser timezone (`Intl.DateTimeFormat().resolvedOptions().timeZone`), with language-based fallbacks (`ja` → Tokyo, `en` → New York, `es` → Madrid, `pt` → Brasília).
+- **1-Click Google Calendar Template Link**: Generates a direct link (`calendar.google.com/calendar/render?...`) for the recipient with the exact start/end time and locked timezone (`ctz`).
 
 ### 🟢 3. Smart Multi-Platform Messaging Pipeline
 - **Single Smart LINE Button**:
   - Automatically copies the localized confirmation message to the recipient's clipboard:
-    > *"Hey Leo! I'd love to go on a date with you! I picked 2026-10-25 (Evening)! 🥂✨"*
+    > *"Hey Leo! I'd love to go on a date with you! I picked 2026-10-25 (19:00 – 22:00)! 🥂✨"*
   - Displays an animated toast notification (*"Message copied! Add on LINE and paste into chat!"*).
   - Deep-links directly to the creator's LINE profile card (`https://line.me/ti/p/~{LINE_ID}`) where the crush can simply tap **Add Friend (友だち追加)** and paste the message into chat.
 - **WhatsApp Click-to-Chat & Bot Support**:
@@ -63,7 +63,7 @@ The platform features two distinct interactive modes:
 - Creators can monitor link interactions live without manual page reloads:
   - Real-time visitor counters.
   - Dodge attempt counts.
-  - Instant live popup alerts when a date date/time is selected.
+  - Instant live popup alerts when a date/time is selected.
 
 ---
 
@@ -82,13 +82,13 @@ The platform features two distinct interactive modes:
 │  - Python 3.12 + Uvicorn ASGI Server                   │
 │  - RESTful APIs (`/api/links`, `/confirm_date`, etc.)  │
 │  - WebSocket Connection Manager (Live Dashboard alerts)│
-│  - i18n Translation Engine (`i18n_service.py`)         │
+│  - i18n & Timezone Engine (`i18n_service.py`)          │
 └──────────────────────────┬─────────────────────────────┘
                            │
 ┌──────────────────────────▼─────────────────────────────┐
 │                 Data & Integrations                    │
 │  - SQLite Database via SQLAlchemy ORM                  │
-│  - Google Calendar API (OAuth 2.0 FreeBusy API)        │
+│  - Custom Slot & Timezone Availability Engine          │
 │  - Cloudflare Tunnels (Zero-Trust HTTPS Public Access) │
 └────────────────────────────────────────────────────────┘
 ```
@@ -100,13 +100,11 @@ The platform features two distinct interactive modes:
 ```
 ├── app/
 │   ├── routes/
-│   │   ├── api.py                 # REST endpoints (link generation, dodges, confirmations)
-│   │   ├── web.py                 # HTML view routes (Home, Prank, Date, Dashboard)
-│   │   └── auth_google.py         # Google OAuth 2.0 authentication endpoints
+│   │   ├── api.py                 # REST endpoints (link generation, dodges, slot validation)
+│   │   └── web.py                 # HTML view routes (Home, Prank, Date, Dashboard)
 │   ├── services/
-│   │   ├── i18n_service.py        # Centralized 4-language dictionary & detection
-│   │   ├── notification_dispatcher.py  # CallMeBot & Facebook Messenger webhooks
-│   │   └── google_calendar.py     # Calendar FreeBusy query helper
+│   │   ├── i18n_service.py        # Centralized 4-language dictionary & timezone engine
+│   │   └── notification_dispatcher.py  # CallMeBot & Facebook Messenger webhooks
 │   ├── static/
 │   │   ├── css/                   # Custom styling and keyframe animations
 │   │   └── js/                    # Client-side i18n helper

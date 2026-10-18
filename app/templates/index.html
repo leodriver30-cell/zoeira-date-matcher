@@ -131,29 +131,51 @@
                 </div>
             </div>
 
-            <!-- Conexão com Google Calendar Simplificada em 1 Clique -->
-            <div class="bg-black/30 border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div class="text-left">
-                    <span class="text-sm font-bold block text-white">{{ t('gcal_sync_title') }}</span>
-                    <span class="text-xs text-slate-400" id="gcalStatusText">
-                        {{ t('gcal_sync_desc') }}
+            <!-- Seletor Interativo de até 10 Dias e Horários Livres (Sem Google Calendar) -->
+            <div class="bg-black/30 border border-rose-500/30 rounded-2xl p-4 sm:p-5 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
+                    <div>
+                        <span class="text-sm font-extrabold block text-white">{{ t('availability_section_title') }}</span>
+                        <span class="text-xs text-slate-400 block mt-0.5">{{ t('availability_section_desc') }}</span>
+                    </div>
+                    <span id="daysCounterBadge" class="self-start sm:self-center px-3 py-1 rounded-full text-xs font-extrabold bg-rose-500/20 border border-rose-500/40 text-rose-300 whitespace-nowrap">
+                        0/10
                     </span>
                 </div>
-                <button type="button" onclick="connectGoogleCalendar()" id="gcalBtn" class="w-full sm:w-auto px-4 py-2.5 bg-white text-slate-800 hover:bg-slate-100 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2.5 shadow-md">
-                    <svg viewBox="0 0 24 24" width="18" height="18">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                    </svg>
-                    <span>{{ t('google_cal_connect_btn') }}</span>
-                </button>
+
+                <!-- Avisos de Duração (3h) e Fuso Horário Automático -->
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-slate-300">
+                    <span class="font-semibold text-amber-300">{{ t('date_duration_notice') }}</span>
+                    <span id="tzNoticeText" class="font-semibold text-emerald-300"></span>
+                </div>
+
+                <!-- Barra de Abas por Mês (Filtro rápido para os próximos 3 meses) -->
+                <div class="space-y-1.5 pt-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-rose-300/90 flex items-center gap-1.5">
+                            {{ t('days_ahead_horizon_notice') }}
+                        </span>
+                    </div>
+                    <div id="monthFilterTabs" class="flex items-center gap-1.5 overflow-x-auto pb-1.5 custom-scrollbar">
+                        <!-- Gerado via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Grade de até 90 Dias para Escolher até 10 -->
+                <div id="creatorDaysGrid" class="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-60 overflow-y-auto p-1 custom-scrollbar">
+                    <!-- Gerado via JavaScript -->
+                </div>
+
+                <!-- Lista de Horários Exatos por Dia Selecionado -->
+                <div id="selectedDaysTimeList" class="space-y-3">
+                    <!-- Gerado via JavaScript conforme os dias são marcados -->
+                </div>
             </div>
         </div>
 
         <!-- Botão de Criação -->
         <div class="mt-8">
-            <button type="button" onclick="generateLink()" id="btnGenerate" class="w-full py-4 bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 hover:from-rose-500 hover:to-pink-600 text-white font-extrabold rounded-xl shadow-lg shadow-rose-900/40 transition-all transform active:scale-98 text-base flex items-center justify-center gap-2">
+            <button type="button" onclick="generateLink()" id="btnGenerate" class="w-full py-4 bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 hover:from-rose-500 hover:to-pink-600 text-white font-extrabold rounded-xl shadow-lg shadow-rose-900/40 transition-all transform active:scale-98 text-base flex items-center justify-center gap-2 cursor-pointer">
                 <span>🚀</span> {{ t('generate_link_btn') }}
             </button>
         </div>
@@ -167,7 +189,7 @@
                 <p id="generatedUrlText" class="font-mono text-sm text-rose-300 break-all select-all font-semibold my-2"></p>
                 
                 <div class="flex flex-wrap gap-2 justify-center mt-3">
-                    <button onclick="copyGeneratedLink()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5">
+                    <button onclick="copyGeneratedLink()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer">
                         📋 {{ t('copy_link_btn') }}
                     </button>
                     <a id="btnOpenLink" href="#" target="_blank" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5">
@@ -186,7 +208,302 @@
 {% block scripts %}
 <script>
     let currentMode = "prank";
-    let googleCalendarToken = null;
+    const MAX_SELECTABLE_DAYS = 10;
+    const PRESET_TIMES = ["12:00", "14:00", "16:00", "18:00", "19:00", "20:00", "21:00"];
+    const FALLBACK_TZS = {{ fallback_timezones | tojson }};
+    const TZ_CITIES = {{ tz_city_names | tojson }};
+
+    // Mapa de dias selecionados: { "YYYY-MM-DD": Set(["19:00", "20:00"]) }
+    const selectedDaySlots = new Map();
+    const upcomingDaysMeta = [];
+
+    function detectCreatorTimezone() {
+        try {
+            const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (browserTz && browserTz.includes("/")) {
+                return browserTz;
+            }
+        } catch (e) {}
+        const lang = window.CURRENT_LANG || "pt";
+        return FALLBACK_TZS[lang] || "America/Sao_Paulo";
+    }
+
+    function formatCreatorTzLabel(tzName) {
+        const lang = window.CURRENT_LANG || "pt";
+        let city = tzName.split("/").pop().replace(/_/g, " ");
+        if (TZ_CITIES[tzName] && TZ_CITIES[tzName][lang]) {
+            city = TZ_CITIES[tzName][lang];
+        }
+        try {
+            const now = new Date();
+            const offsetMin = -now.getTimezoneOffset();
+            const sign = offsetMin >= 0 ? "+" : "-";
+            const absMin = Math.abs(offsetMin);
+            const h = Math.floor(absMin / 60);
+            const m = absMin % 60;
+            const utcStr = m === 0 ? `UTC${sign}${h}` : `UTC${sign}${h}:${String(m).padStart(2, "0")}`;
+            return `${city} (${utcStr})`;
+        } catch (e) {
+            return `${city} (${tzName})`;
+        }
+    }
+
+    function format3hRange(hhmm) {
+        const parts = hhmm.split(":");
+        const h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        const endTotal = (h * 60 + m + 180) % (24 * 60);
+        const endH = String(Math.floor(endTotal / 60)).padStart(2, "0");
+        const endM = String(endTotal % 60).padStart(2, "0");
+        return `${hhmm}–${endH}:${endM}`;
+    }
+
+    let currentMonthFilter = "all";
+
+    function initCreatorCalendar() {
+        const tz = detectCreatorTimezone();
+        const tzLabel = formatCreatorTzLabel(tz);
+        const tzNoticeEl = document.getElementById("tzNoticeText");
+        if (tzNoticeEl) {
+            tzNoticeEl.innerText = t("timezone_auto_notice", { tz: tzLabel });
+        }
+
+        const weekdays = t("weekdays_short") || ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+        const months = t("months") || ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const now = new Date();
+        upcomingDaysMeta.length = 0;
+
+        for (let i = 1; i <= 90; i++) {
+            const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, "0");
+            const dd = String(d.getDate()).padStart(2, "0");
+            const dateStr = `${yyyy}-${mm}-${dd}`;
+            // JS getDay(): 0=Sun..6=Sat -> converte para 0=Mon..6=Sun
+            const wdIdx = (d.getDay() + 6) % 7;
+            const wdLabel = Array.isArray(weekdays) ? weekdays[wdIdx] : "";
+            const monthIdx = d.getMonth();
+            const mName = Array.isArray(months) ? months[monthIdx] : `${mm}`;
+            const monthKey = `${yyyy}-${mm}`;
+
+            upcomingDaysMeta.push({
+                date: dateStr,
+                shortLabel: `${dd}/${mm}`,
+                wdLabel: wdLabel,
+                monthKey: monthKey,
+                monthLabel: `${mName} ${yyyy}`
+            });
+        }
+
+        renderMonthFilterTabs();
+        renderCreatorDaysGrid();
+        renderSelectedDaysTimeList();
+    }
+
+    function renderMonthFilterTabs() {
+        const container = document.getElementById("monthFilterTabs");
+        if (!container) return;
+
+        const monthMap = new Map();
+        upcomingDaysMeta.forEach(item => {
+            if (!monthMap.has(item.monthKey)) {
+                monthMap.set(item.monthKey, item.monthLabel);
+            }
+        });
+
+        container.innerHTML = "";
+
+        const allBtn = document.createElement("button");
+        allBtn.type = "button";
+        allBtn.onclick = () => setMonthFilter("all");
+        const isAllActive = currentMonthFilter === "all";
+        allBtn.className = isAllActive
+            ? "py-1.5 px-3 rounded-lg text-xs font-black transition-all bg-rose-600 text-white shadow-md shadow-rose-950/40 shrink-0 cursor-pointer"
+            : "py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 shrink-0 cursor-pointer";
+        allBtn.innerText = t("month_filter_all") || "Todos";
+        container.appendChild(allBtn);
+
+        monthMap.forEach((label, key) => {
+            let selectedInMonth = 0;
+            selectedDaySlots.forEach((_, d) => {
+                if (d.startsWith(key)) selectedInMonth++;
+            });
+
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.onclick = () => setMonthFilter(key);
+            const isActive = currentMonthFilter === key;
+
+            btn.className = isActive
+                ? "py-1.5 px-3 rounded-lg text-xs font-black transition-all bg-rose-600 text-white shadow-md shadow-rose-950/40 shrink-0 flex items-center gap-1.5 cursor-pointer"
+                : "py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 shrink-0 flex items-center gap-1.5 cursor-pointer";
+
+            btn.innerHTML = `
+                <span>${label}</span>
+                ${selectedInMonth > 0 ? `<span class="bg-emerald-400 text-slate-950 text-[10px] px-1.5 py-0.2 rounded-full font-black">${selectedInMonth}</span>` : ''}
+            `;
+            container.appendChild(btn);
+        });
+    }
+
+    function setMonthFilter(monthKey) {
+        currentMonthFilter = monthKey;
+        renderMonthFilterTabs();
+        renderCreatorDaysGrid();
+    }
+
+    function renderCreatorDaysGrid() {
+        const grid = document.getElementById("creatorDaysGrid");
+        const badge = document.getElementById("daysCounterBadge");
+        if (!grid) return;
+
+        const count = selectedDaySlots.size;
+        if (badge) {
+            badge.innerText = t("days_selected_counter", { count: count });
+        }
+
+        const filteredDays = currentMonthFilter === "all"
+            ? upcomingDaysMeta
+            : upcomingDaysMeta.filter(item => item.monthKey === currentMonthFilter);
+
+        grid.innerHTML = "";
+        filteredDays.forEach(item => {
+            const isSelected = selectedDaySlots.has(item.date);
+            const timesCount = isSelected ? selectedDaySlots.get(item.date).size : 0;
+
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.onclick = () => toggleCreatorDay(item.date);
+            btn.className = isSelected
+                ? "p-2 rounded-xl border-2 border-emerald-400 bg-emerald-500/20 text-white font-bold text-xs flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer shadow-md"
+                : "p-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 font-semibold text-xs flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer";
+
+            btn.innerHTML = `
+                <span class="text-[10px] uppercase opacity-75">${item.wdLabel}</span>
+                <span class="text-xs font-extrabold">${item.shortLabel}</span>
+                <span class="text-[10px] ${isSelected ? 'text-emerald-300 font-black' : 'text-slate-500'}">
+                    ${isSelected ? `✓ ${timesCount}h` : '+'}
+                </span>
+            `;
+            grid.appendChild(btn);
+        });
+    }
+
+    function toggleCreatorDay(dateStr) {
+        if (selectedDaySlots.has(dateStr)) {
+            selectedDaySlots.delete(dateStr);
+        } else {
+            if (selectedDaySlots.size >= MAX_SELECTABLE_DAYS) {
+                alert(t("max_days_reached"));
+                return;
+            }
+            // Pré-seleciona 19:00 por padrão para facilitar
+            selectedDaySlots.set(dateStr, new Set(["19:00"]));
+        }
+        renderMonthFilterTabs();
+        renderCreatorDaysGrid();
+        renderSelectedDaysTimeList();
+    }
+
+    function toggleTimeForDay(dateStr, timeStr) {
+        if (!selectedDaySlots.has(dateStr)) return;
+        const set = selectedDaySlots.get(dateStr);
+        if (set.has(timeStr)) {
+            set.delete(timeStr);
+        } else {
+            if (set.size >= 8) return;
+            set.add(timeStr);
+        }
+        renderCreatorDaysGrid();
+        renderSelectedDaysTimeList();
+    }
+
+    function addCustomTimeForDay(dateStr, inputId) {
+        const input = document.getElementById(inputId);
+        if (!input || !input.value) return;
+        const val = input.value.trim().slice(0, 5);
+        if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(val)) return;
+
+        if (!selectedDaySlots.has(dateStr)) return;
+        const set = selectedDaySlots.get(dateStr);
+        if (set.size < 8) {
+            set.add(val);
+        }
+        renderCreatorDaysGrid();
+        renderSelectedDaysTimeList();
+    }
+
+    function copyTimesToAllDays(sourceDateStr) {
+        if (!selectedDaySlots.has(sourceDateStr)) return;
+        const sourceTimes = Array.from(selectedDaySlots.get(sourceDateStr));
+        selectedDaySlots.forEach((_, key) => {
+            selectedDaySlots.set(key, new Set(sourceTimes));
+        });
+        renderCreatorDaysGrid();
+        renderSelectedDaysTimeList();
+    }
+
+    function renderSelectedDaysTimeList() {
+        const container = document.getElementById("selectedDaysTimeList");
+        if (!container) return;
+        container.innerHTML = "";
+
+        const sortedDates = Array.from(selectedDaySlots.keys()).sort();
+        sortedDates.forEach(dateStr => {
+            const meta = upcomingDaysMeta.find(m => m.date === dateStr) || { shortLabel: dateStr, wdLabel: "" };
+            const timesSet = selectedDaySlots.get(dateStr);
+            const allTimes = Array.from(new Set([...PRESET_TIMES, ...Array.from(timesSet)])).sort();
+            const customInputId = `customTime_${dateStr.replace(/-/g, "")}`;
+
+            const card = document.createElement("div");
+            card.className = "bg-slate-950/70 border border-white/10 rounded-xl p-3.5 text-left space-y-2.5";
+
+            const headerHtml = `
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="text-xs font-extrabold text-rose-300">
+                        📌 ${t("select_times_for_day", { date: `${meta.wdLabel} ${meta.shortLabel}` })}
+                    </span>
+                    ${sortedDates.length > 1 ? `
+                        <button type="button" onclick="copyTimesToAllDays('${dateStr}')" class="text-[11px] font-bold text-indigo-300 hover:text-indigo-200 underline cursor-pointer">
+                            ${t("apply_times_all_days")}
+                        </button>
+                    ` : ""}
+                </div>
+            `;
+
+            const chipsHtml = allTimes.map(tm => {
+                const active = timesSet.has(tm);
+                return `
+                    <button type="button" onclick="toggleTimeForDay('${dateStr}', '${tm}')"
+                        class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                            active
+                                ? "bg-emerald-600/30 border-emerald-400 text-white shadow"
+                                : "bg-white/5 border-white/10 text-slate-400 hover:text-white"
+                        }">
+                        ${active ? "✓ " : ""}${format3hRange(tm)}
+                    </button>
+                `;
+            }).join("");
+
+            const customTimeHtml = `
+                <div class="flex items-center gap-1.5 pt-1">
+                    <input type="time" id="${customInputId}" value="19:30"
+                        class="bg-black/50 border border-white/15 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-rose-400">
+                    <button type="button" onclick="addCustomTimeForDay('${dateStr}', '${customInputId}')"
+                        class="px-2.5 py-1 bg-rose-600/30 hover:bg-rose-600/50 border border-rose-500/40 rounded-lg text-xs font-bold text-rose-200 cursor-pointer">
+                        ${t("add_custom_time_btn")}
+                    </button>
+                </div>
+            `;
+
+            card.innerHTML = `
+                ${headerHtml}
+                <div class="flex flex-wrap gap-1.5">${chipsHtml}</div>
+                ${customTimeHtml}
+            `;
+            container.appendChild(card);
+        });
+    }
 
     function switchTab(mode) {
         currentMode = mode;
@@ -220,7 +537,6 @@
         const panelWa = document.getElementById("panelWhatsapp");
         const panelFb = document.getElementById("panelFacebook");
 
-        // Reset all tabs
         [tabLine, tabWa, tabFb].forEach(t => {
             t.className = "py-2.5 px-3 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white";
         });
@@ -248,23 +564,26 @@
         document.getElementById("badgeFacebook").classList.toggle("hidden", !fbVal);
     }
 
-    function connectGoogleCalendar() {
-        const width = 500, height = 620;
-        const left = (window.innerWidth - width) / 2;
-        const top = (window.innerHeight - height) / 2;
-        const authWindow = window.open(`/auth/google/login?lang=${window.CURRENT_LANG}`, "GoogleAuth", `width=${width},height=${height},top=${top},left=${left}`);
-        
-        window.addEventListener("message", (event) => {
-            if (event.data && event.data.type === "GOOGLE_AUTH_SUCCESS") {
-                googleCalendarToken = JSON.stringify(event.data.token);
-                document.getElementById("gcalStatusText").innerText = `✅ ${t('google_cal_connected')}`;
-                document.getElementById("gcalBtn").innerText = `✅ ${t('google_cal_connected')}`;
-                document.getElementById("gcalBtn").classList.add("bg-emerald-600/30", "border-emerald-500");
-            }
-        });
-    }
-
     async function generateLink() {
+        let availableSlots = null;
+        if (currentMode === "date") {
+            if (selectedDaySlots.size === 0) {
+                alert(t("error_select_at_least_one_day"));
+                return;
+            }
+            availableSlots = [];
+            for (const [dateStr, timesSet] of selectedDaySlots.entries()) {
+                if (timesSet.size === 0) {
+                    alert(t("error_day_without_time", { date: dateStr }));
+                    return;
+                }
+                availableSlots.push({
+                    date: dateStr,
+                    times: Array.from(timesSet).sort()
+                });
+            }
+        }
+
         const btn = document.getElementById("btnGenerate");
         btn.disabled = true;
         btn.innerHTML = `<span>⏳</span> ${t('creating_btn')}`;
@@ -277,7 +596,9 @@
             creator_whatsapp: currentMode === "date" ? document.getElementById("creatorWhatsapp").value : null,
             creator_line: currentMode === "date" ? document.getElementById("creatorLine").value : null,
             creator_facebook: currentMode === "date" ? document.getElementById("creatorFacebook").value : null,
-            google_credentials: googleCalendarToken
+            available_slots: availableSlots,
+            timezone: detectCreatorTimezone(),
+            lang: window.CURRENT_LANG || "pt"
         };
 
         try {
@@ -288,14 +609,15 @@
             });
             const data = await resp.json();
 
-            if (data.status === "success") {
-                // Anexa o idioma atual da página ao link gerado
+            if (resp.ok && data.status === "success") {
                 const fullUrl = `${window.location.origin}${data.url}?lang=${window.CURRENT_LANG}`;
                 document.getElementById("generatedUrlText").innerText = fullUrl;
                 document.getElementById("btnOpenLink").href = fullUrl;
                 document.getElementById("btnDashboardLink").href = `${window.location.origin}${data.dashboard_url}?lang=${window.CURRENT_LANG}`;
                 document.getElementById("resultBox").classList.remove("hidden");
                 confetti({ particleCount: 70, spread: 60, origin: { y: 0.7 } });
+            } else {
+                alert(data.detail || t('error_create_link'));
             }
         } catch (err) {
             alert(t('error_create_link'));
@@ -311,5 +633,7 @@
             alert(t('message_copied'));
         });
     }
+
+    document.addEventListener("DOMContentLoaded", initCreatorCalendar);
 </script>
 {% endblock %}
