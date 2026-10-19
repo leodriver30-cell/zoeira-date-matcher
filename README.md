@@ -17,39 +17,38 @@
 
 ## 📖 Overview
 
-**Zoeira & Date Matcher** is a full-featured, modern web application designed for playful social interactions and romantic date invitations. Using playful psychological UI patterns, the app makes saying **"NO"** practically impossible through an evasive button and a mischievous animated kitten—leaving **"YES"** as the only inevitable choice!
+**Zoeira & Date Matcher** is a full-featured, modern web application designed for playful social interactions and romantic date invitations. Using playful psychological UI patterns, the app makes saying **"NO"** practically impossible through an evasive button, an animated mischievous kitten, and clever hiding mechanics—leaving **"YES"** as the only inevitable choice!
 
 The platform features two distinct interactive modes:
-1. **😂 Friend Prank Mode**: Humorous trick links where the "NO" button flees indefinitely, tracking dodge attempts before presenting a hilarious celebration card.
-2. **💖 Romantic Date Mode**: Personalized date invitation pages featuring interactive availability calendars, time slot selection (Evening, Afternoon, Morning), Google Calendar synchronization, and automated 1-click confirmation sharing via **LINE**, **WhatsApp**, and **Facebook Messenger**.
+1. **😂 Friend Prank Mode**: Humorous trick links where the "NO" button dodges **7 times** across the screen. On the **8th attempt**, it slides directly behind the "YES" button and disappears completely (invisible, unclickable, zero edges peeking out), forcing the friend to click **"YES"**!
+2. **💖 Romantic Date Mode**: Personalized date invitations where the creator selects up to **10 free days** across a **90-day (~3 month) advance calendar** with **exact 3-hour time slots** (e.g., `19:00 – 22:00`), interactive month navigation tabs, locked browser timezone, and 1-click confirmation sharing via **LINE**, **WhatsApp**, and **Facebook Messenger**.
 
 ---
 
 ## ✨ Key Features
 
-### 🐱 1. Responsive Mischievous Cat Button Evasion System
-- **Dual-Phase Evasion**:
-  - *Phase 1*: The "NO" button dodges to another corner within safe card boundaries.
-  - *Phase 2 (The Cat Heist)*: A mischievous cartoon cat (`🐈`) pounces onto the button, displays a comic speech bubble (*"That 'NO' is mine now! 😼💨"*), steals the button, and scampers across the screen leaving a trail of paw prints (`🐾🐾🐾`).
-- **Mobile Touch Debouncing**: Built-in 350ms touch debounce lock preventing mobile browsers from skipping straight to the end due to concurrent `pointerdown`, `touchstart`, and `click` triggers.
-- **Dynamic Viewport Scaling**: Scampers are calculated relative to `window.innerWidth`, ensuring optimal theatrical visibility on both 375px mobile screens and ultra-wide desktop monitors.
-- **Irresistible "YES" Highlight**: Once the "NO" button is stolen, the "YES" button automatically expands, pulsates, and glows with romantic hearts.
+### 😂 1. Modo Zoeira: 7-Dodge & Button Hiding Evasion
+- **7 Evasive Dodges**: When the friend tries to click "NO", the button dodges and teleports away across 7 dynamic attempts.
+- **Stealth Hide Behind "YES"**: On the 8th dodge, the "NO" button slides smoothly directly behind the "YES" button, scales down (`scale(0.5)`), and is rendered completely invisible and unclickable (`opacity: 0`, `visibility: hidden`, `pointer-events: none`, `disabled = true`), leaving "YES" as the only possible option!
+- **Playful Dynamic Hints**: Comic speech bubbles and hints update on every attempt ("Tried clicking No? Don't even try! 😂").
 
-### 📅 2. Custom 10-Day & Exact Time Slot Scheduling (3h Duration)
-- **Creator-Controlled Availability**: Creators select up to **10 free days** and define **exact time slots** (e.g., `19:00 – 22:00`, 3-hour default duration) directly when creating the invitation—no external account login required.
-- **Automatic Timezone Detection & Language Fallback**: Automatically locks the invitation to the creator's browser timezone (`Intl.DateTimeFormat().resolvedOptions().timeZone`), with language-based fallbacks (`ja` → Tokyo, `en` → New York, `es` → Madrid, `pt` → Brasília).
-- **1-Click Google Calendar Template Link**: Generates a direct link (`calendar.google.com/calendar/render?...`) for the recipient with the exact start/end time and locked timezone (`ctz`).
+### 🐱 2. Mischievous Cat Button Heist (Date Invitation Phase)
+- **The Cat Heist**: In the date invitation phase, a mischievous cartoon cat (`🐈`) pounces onto the button, displays a comic speech bubble (*"That 'NO' is mine now! 😼💨"*), steals the button, and scampers across the screen leaving a trail of paw prints (`🐾🐾🐾`).
+- **Irresistible "YES" Highlight**: Once the "NO" button vanishes, the "YES" button expands, pulsates, and glows with romantic hearts.
 
-### 🟢 3. Smart Multi-Platform Messaging Pipeline
-- **Single Smart LINE Button**:
-  - Automatically copies the localized confirmation message to the recipient's clipboard:
-    > *"Hey Leo! I'd love to go on a date with you! I picked 2026-10-25 (19:00 – 22:00)! 🥂✨"*
-  - Displays an animated toast notification (*"Message copied! Add on LINE and paste into chat!"*).
-  - Deep-links directly to the creator's LINE profile card (`https://line.me/ti/p/~{LINE_ID}`) where the crush can simply tap **Add Friend (友だち追加)** and paste the message into chat.
-- **WhatsApp Click-to-Chat & Bot Support**:
-  - Pre-filled direct message links (`wa.me/...`).
-  - Automated hands-free background webhook notifications via **CallMeBot** API.
-- **Facebook Messenger Integration**: Direct routing to creator profiles (`m.me/{username}`).
+### 📅 3. 90-Day Advance Calendar with Month Tabs & Exact 3h Slots
+- **Up to 90 Days (~3 Months) Ahead**: Built specifically to support scheduling customs in Japan and worldwide where dates are often planned 1 to 2+ months in advance.
+- **Interactive Month Navigation Tabs**: Quick filter pills (`[ All Months ]`, `[ October ]`, `[ November ]`, `[ December ]`, etc.) with badges showing how many days are booked in each month.
+- **Creator-Controlled Availability**: Creators select up to **10 free days** and define **exact time slots** (e.g., `19:00 – 22:00`, 3-hour standard duration) with presets, custom `<input type="time">`, and a 1-click *"Apply to all days"* button.
+- **Automatic Browser Timezone Detection**: Automatically locks the invitation to the creator's browser timezone (`Intl.DateTimeFormat().resolvedOptions().timeZone`), with language-based fallbacks (`ja` → Tokyo, `en` → New York, `es` → Madrid, `pt` → Brasília). Changing `?lang=` on the recipient page translates UI texts without shifting the timezone.
+- **1-Click Google Calendar Template**: Generates a pre-filled link (`calendar.google.com/calendar/render?...`) with the exact 3-hour duration, midnight rollover support, and locked timezone parameter (`ctz`).
+
+### 🟢 4. Isolated Creator Contacts (Zero Hardcoded Data)
+- **100% Privacy & Isolation**: No personal phone numbers or LINE IDs are hardcoded in the codebase. Each creator uses their own channels:
+  - **LINE**: Pre-filled confirmation message with 1-click clipboard copy + deep link to the creator's LINE profile (`line.me/ti/p/~{LINE_ID}`).
+  - **WhatsApp**: Click-to-chat link (`wa.me/...`) and optional automated background webhook via CallMeBot.
+  - **Facebook Messenger**: Direct link to profile (`m.me/{username}`).
+  - **Universal Fallback**: If no social channels are configured, only the **"Copy Ready Message"** and **"Add to Google Calendar"** buttons appear.
 
 ### 🌐 4. Full 4-Language Internationalization (i18n)
 - Seamless real-time language switching:
@@ -162,7 +161,7 @@ The platform features two distinct interactive modes:
    # Copy template
    cp .env.example .env
    ```
-   *(Edit `.env` if you want to configure CallMeBot or Google Calendar OAuth)*
+   *(Edit `.env` if you want to configure CallMeBot or Facebook Messenger bots)*
 
 5. **Run the server**:
    ```bash
